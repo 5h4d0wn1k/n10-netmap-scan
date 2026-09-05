@@ -260,7 +260,7 @@ class NetmapScanner:
         start_time = time.time()
 
         if method == 'arp':
-            self.hosts = self.arp_scan_arpping(target_range)
+            self.hosts = self.arp_scan_arping(target_range)
             if not self.hosts:
                 print("[*] arping returned nothing, trying ARP table...")
                 self.hosts = self.arp_scan_arp_table()
@@ -269,7 +269,7 @@ class NetmapScanner:
         elif method == 'table':
             self.hosts = self.arp_scan_arp_table()
         else:
-            self.hosts = self.arp_scan_arpping(target_range)
+            self.hosts = self.arp_scan_arping(target_range)
 
         elapsed = time.time() - start_time
         print(f"[+] Found {len(self.hosts)} hosts in {elapsed:.1f}s")
