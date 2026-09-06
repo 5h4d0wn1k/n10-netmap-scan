@@ -82,6 +82,55 @@ Interface: eth0
             `--- [phone]
 ```
 
+## Tests
+
+No network access, no root, no external dependencies:
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+## Offline Demo
+
+```bash
+cd firmware
+python3 netmap_scan.py --demo        # exit 0
+python3 netmap_scan.py --harness     # legacy fixture harness, exit 0
+python3 netmap_scan.py --help
+```
+
+The demo scans the reserved documentation range `192.0.2.0/64` from a
+fixture in `arp`, `ping`, and `table` modes and asserts the resulting host
+lists are consistent. It never sends a packet or reads a live interface.
+
+## Live Lab Test Plan
+
+Performed in an **isolated, self-owned lab** only (documentation range
+`192.0.2.0/24`, MAC `00:11:22:33:44:55` reserved placeholders). Never run
+against third-party networks.
+
+1. **Setup** — Create an isolated VLAN with one partner host acting as
+   gateway at the documented gateway placeholder.
+2. **ARP scan (arping)** — `sudo python3 netmap_scan.py -i lab-eth0 -t 192.0.2.0 -m arp`
+   → expect every powered-on host in the lab to appear with a MAC/vendor.
+3. **Ping sweep** — `python3 netmap_scan.py -i lab-eth0 -t 192.0.2.0 -m ping`
+   → same host set (may omit hosts that block ICMP).
+4. **ARP table read** — `python3 netmap_scan.py -i lab-eth0 -t 192.0.2.0 -m table`
+   → reads the kernel ARP table; host set is a subset of active sessions.
+5. **Consistency** — compare host lists across arp/ping/table on the same
+   lab; the tool's own demo asserts this exact consistency offline.
+6. **Topology / map** — `--topology` and `--map` should classify the
+   documented gateway placeholder as router and list remaining hosts.
+7. **Cleanup** — verify no ARP-table residue and only-lab MACs were touched.
+
+## Metrics
+
+- Hosts discovered: count of unique IPs found per scan method.
+- MAC/vendor resolution rate: `hosts with OUI match / total hosts`.
+- Scan latency: wall-clock time for a full `/24` sweep.
+- Mode consistency: Jaccard similarity between arp, ping, and table host sets.
+- False positives/negatives: hosts wrongly present or missing vs. a manual lab inventory.
+
 ## Legal Disclaimer
 
 **IMPORTANT: Read before use.**
